@@ -17,6 +17,7 @@ import os
 import sys
 from bottle import run
 
+import rsa
 #-----------------------------------------------------------------------------
 # You may eventually wish to put these in their own directories and then load 
 # Each file separately
@@ -51,25 +52,29 @@ def run_server():
 # Comment out the current manage_db function, and 
 # uncomment the following one to load an SQLite3 database
 
+import no_sql_db
+
 def manage_db():
     '''
         Blank function for database support, use as needed
     '''
+    field = ["username", "password", "salt"]
+    db = no_sql_db.Table("username&password", field)
     pass
 
-"""
-import sql
-    
-def manage_db():
-    '''
-        manage_db
-        Starts up and re-initialises an SQL databse for the server
-    '''
-    database_args = ":memory:" # Currently runs in RAM, might want to change this to a file if you use it
-    sql_db = sql.SQLDatabase(database_args=database_args)
 
-    return
-"""
+# import sql
+    
+# def manage_db():
+#     '''
+#         manage_db
+#         Starts up and re-initialises an SQL databse for the server
+#     '''
+#     database_args = ":memory:" # Currently runs in RAM, might want to change this to a file if you use it
+#     sql_db = sql.SQLDatabase(database_args=database_args)
+
+#     return
+
 
 #-----------------------------------------------------------------------------
 
@@ -78,7 +83,7 @@ def manage_db():
 
 command_list = {
     'manage_db' : manage_db,
-    'server'       : run_server
+    'server' : run_server
 }
 
 # The default command if none other is given
@@ -103,6 +108,20 @@ def run_commands(args):
         else:
             print("Command '{command}' not found".format(command=command))
 
+
+def generate_keys():
+    (pubkey, privkey) = rsa.newkeys(1024)
+
+    pub = pubkey.save_pkcs1()
+    pri = privkey.save_pkcs1()
+    with open("./keys/public.pem", "wb+") as f:
+        f.write(pub)
+
+    with open("./keys/private.pem", "wb+") as f:
+        f.write(pri)
 #-----------------------------------------------------------------------------
 
-run_commands(sys.argv)
+if __name__ == '__main__':
+    generate_keys()
+    run_commands(sys.argv)
+    
