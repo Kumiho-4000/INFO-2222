@@ -45,7 +45,7 @@ def run_server():
         run_server
         Runs a bottle server
     '''
-    run(host=host, port=port, debug=debug)
+    run(host=host, port=port, debug=debug, keyfile='key.pem', certfile='cert.pem')
 
 #-----------------------------------------------------------------------------
 # Optional SQL support
@@ -58,22 +58,9 @@ def manage_db():
     '''
         Blank function for database support, use as needed
     '''
-    field = ["username", "password", "salt"]
-    db = no_sql_db.Table("username&password", field)
+    db = no_sql_db.DB()
     pass
 
-
-# import sql
-    
-# def manage_db():
-#     '''
-#         manage_db
-#         Starts up and re-initialises an SQL databse for the server
-#     '''
-#     database_args = ":memory:" # Currently runs in RAM, might want to change this to a file if you use it
-#     sql_db = sql.SQLDatabase(database_args=database_args)
-
-#     return
 
 
 #-----------------------------------------------------------------------------

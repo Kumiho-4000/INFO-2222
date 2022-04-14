@@ -1,84 +1,133 @@
-# This file provides a very simple "no sql database using python dictionaries"
-# If you don't know SQL then you might consider something like this for this course
-# We're not using a class here as we're roughly expecting this to be a singleton
-
-# If you need to multithread this, a cheap and easy way is to stick it on its own bottle server on a different port
-# Write a few dispatch methods and add routes
-
-# A heads up, this code is for demonstration purposes; you might want to modify it for your own needs
-# Currently it does basic insertions and lookups
+import rsa
+from Crypto.Hash import MD5
+import random
+import string
 
 class Table():
-    def __init__(self, table_name, *table_fields):
+    def __init__(self, table_name, table_fields):
         self.entries = []
         self.fields = table_fields
         self.name = table_name
+   
+        # Create csv file and write fields
+        with open("database/" + self.name + ".csv", "w") as f:
+            fields = ""
+            for i in (table_fields):
+                fields = fields + i + ','
+            fields = fields[:len(fields) - 1]
+            fields = fields + '\n'
 
-    def create_entry(self, data):
-        '''
-        Inserts an entry in the table
-        Doesn't do any type checking
-        '''
-
-        # Bare minimum, we'll check the number of fields
-        if len(data) != len(self.fields):
-            raise ValueError('Wrong number of fields for table')
-
-        self.entries.append(data)
+            f.write(fields)
         return
 
-    def search_table(self, target_field_name, target_value):
-        '''
-            Search the table given a field name and a target value
-            Returns the first entry found that matches
-        '''
-        # Lazy search for matching entries
-        for entry in self.entries:
-            for field_name, value in zip(self.fields, entry):
-                if target_field_name == field_name and target_value == value:
-                    return entry
+    # Add new entry into table
+    # Users(True): Personal information for a new user
+    # Msgs(False): New message
+    def add_users_entry(self, username, salt, hashvalue, firendlist):
 
-        # Nothing Found
-        return None
+        with open("database/" + self.name + ".csv", "a") as fa:
+            fa.write(username + ',' + salt + ',' + hashvalue)
+        
+        fa = open("database/" + self.name + ".csv", "a")
+        for i in firendlist:
+            fa.write(',' + i)
+        
+        fa.write('\n')
+        fa.close()
+        
+    # Search specific line
+    def search_in_table(self, username):
+        with open("database/" + self.name + ".csv", "r") as f:
+            lines = f.readlines()
+
+            for line in lines:
+                info = line.split(',', 3)
+                # info: username, salt, hashvalue, friendlist
+                if info[0] == username:
+                    return info
+        return
+
+
+
+
+
+class Bin():
+    def __init__(self, username, caller):
+        self.digest = username + caller
+        with open("database/" + self.digest + ".bin", "w") as f:
+            f.write('')
+    
+    def add_line(self, ecrypto):
+        with open("database/" + self.digest + ".bin", "ab") as f:
+            f.write(ecrypto)
+
+
+
 
 
 class DB():
-    '''
-    This is a singleton class that handles all the tables
-    You'll probably want to extend this with features like multiple lookups, and deletion
-    A method to write to and load from file might also be useful for your purposes
-    '''
     def __init__(self):
+        # Tables dictionary
         self.tables = {}
 
-        # Setup your tables
-        self.add_table('users', "id", "username", "password")
+        self.fields_users = ["username", "salt", "hashvalue", "friendlist"]
+        self.fields_msgs = []
+
+        # Setup users table
+        self.add_table('users')
+        return
+
+    # Store user login message and friend list
+    def add_table(self, table_name):
+        table = Table(table_name, self.fields_users)
+        self.tables[table_name] = table
+        return
+
+    # Store message
+    def add_bin(self, username, caller):
+        bin = Bin(username, caller)
+        self.tables[username + caller] = bin 
         
         return
 
-    def add_table(self, table_name, *table_fields):
-        '''
-            Adds a table to the database
-        '''
-        table = Table(table_name, *table_fields)
-        self.tables[table_name] = table
-
-        return
 
 
-    def search_table(self, table_name, target_field_name, target_value):
-        '''
-            Calls the search table method on an appropriate table
-        '''
-        return self.tables[table_name].search_table(target_field_name, target_value)
-
-    def create_table_entry(self, table_name, data):
-        '''
-            Calls the create entry method on the appropriate table
-        '''
-        return self.tables[table_name].create_entry(data)
 
 
-# Our global database
-# Invoke this as needed
-database = DB()
+if __name__ == '__main__':
+    db = DB()
+    ascii_set = list(string.ascii_lowercase + string.ascii_uppercase + string.digits)
+    ascii_set_length = len(ascii_set)
+
+    def generate_random_string(size):
+            res = []
+            for i in range(size):
+                res.append(ascii_set[random.randint(0, ascii_set_length - 1)])
+            
+            return "".join(res)
+
+    msg = "123"
+    salt = generate_random_string(128)
+    hashed = MD5.new((msg + salt).encode()).hexdigest()
+    ls = ["Bob", "Carry"]
+    db.tables["users"].add_users_entry("Alice", salt, hashed, ls)
+
+    msg = '234'
+    salt = generate_random_string(128)
+    hashed = MD5.new((msg + salt).encode()).hexdigest()
+    ls = [" "]
+    db.tables["users"].add_users_entry("Bob", salt, hashed, ls)
+
+    db.add_bin("Alice", "Bob")
+    
+    plaintext = "1 2, 3"
+    # Load public key
+    with open('keys/public.pem','rb+') as publickfile:
+        p = publickfile.read()
+    pubkey = rsa.PublicKey.load_pkcs1(p)
+    print('**********公钥已导入,开始RSA加密**********')
+
+    # Encrypt text
+    crypto = rsa.encrypt(bytes(plaintext, "utf_8"), pubkey)
+
+    db.tables["AliceBob"].add_line(crypto)
