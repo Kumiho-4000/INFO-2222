@@ -4,7 +4,8 @@
     maybe some simple program logic
 '''
 
-from bottle import route, get, post, error, request, static_file
+from turtle import mode
+from bottle import route, get, post, error, request, static_file, response
 
 import model
 
@@ -64,6 +65,7 @@ def serve_js(js):
 
 # Redirect to login
 @get('/')
+
 @get('/home')
 def get_index():
     '''
@@ -71,6 +73,7 @@ def get_index():
         
         Serves the index page
     '''
+    
     return model.index()
 
 #-----------------------------------------------------------------------------
@@ -118,6 +121,14 @@ def get_login_controller():
     '''
     return model.signup_form()
 
+@post('/signup')
+def post_signup():
+    print(123)
+    username = request.forms.get('username')
+    password = request.forms.get('password')
+    return model.signup_check(username, password)
+
+
 #-----------------------------------------------------------------------------
 
 @get('/about')
@@ -128,6 +139,30 @@ def get_about():
         Serves the about page
     '''
     return model.about()
+#-----------------------------------------------------------------------------
+
+@get("/public_key")
+def send_public_key():
+    return model.send_public_key()
+
+#-----------------------------------------------------------------------------
+
+@get("/server_key")
+def send_server_key():
+    return model.send_server_key()
+
+#-----------------------------------------------------------------------------
+
+@get("/server_cert")
+def send_server_cert():
+    return model.send_server_cert()
+
+#-----------------------------------------------------------------------------
+
+@get("/sign")
+def send_server_cert():
+    return model.send_sign()
+
 #-----------------------------------------------------------------------------
 
 # Help with debugging

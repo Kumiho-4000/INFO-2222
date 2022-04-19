@@ -94,40 +94,40 @@ class DB():
 
 
 
-if __name__ == '__main__':
-    db = DB()
-    ascii_set = list(string.ascii_lowercase + string.ascii_uppercase + string.digits)
-    ascii_set_length = len(ascii_set)
+# if __name__ == '__main__':
+#     db = DB()
+#     ascii_set = list(string.ascii_lowercase + string.ascii_uppercase + string.digits)
+#     ascii_set_length = len(ascii_set)
 
-    def generate_random_string(size):
-            res = []
-            for i in range(size):
-                res.append(ascii_set[random.randint(0, ascii_set_length - 1)])
+#     def generate_random_string(size):
+#             res = []
+#             for i in range(size):
+#                 res.append(ascii_set[random.randint(0, ascii_set_length - 1)])
             
-            return "".join(res)
+#             return "".join(res)
 
-    msg = "123"
-    salt = generate_random_string(128)
-    hashed = MD5.new((msg + salt).encode()).hexdigest()
-    ls = ["Bob", "Carry"]
-    db.tables["users"].add_users_entry("Alice", salt, hashed, ls)
+#     msg = "123"
+#     salt = generate_random_string(128)
+#     hashed = MD5.new((msg + salt).encode()).hexdigest()
+#     ls = ["Bob", "Carry"]
+#     db.tables["users"].add_users_entry("Alice", salt, hashed, ls)
 
-    msg = '234'
-    salt = generate_random_string(128)
-    hashed = MD5.new((msg + salt).encode()).hexdigest()
-    ls = [" "]
-    db.tables["users"].add_users_entry("Bob", salt, hashed, ls)
+#     msg = '234'
+#     salt = generate_random_string(128)
+#     hashed = MD5.new((msg + salt).encode()).hexdigest()
+#     ls = [" "]
+#     db.tables["users"].add_users_entry("Bob", salt, hashed, ls)
 
-    db.add_bin("Alice", "Bob")
+#     db.add_bin("Alice", "Bob")
     
-    plaintext = "1 2, 3"
-    # Load public key
-    with open('keys/public.pem','rb+') as publickfile:
-        p = publickfile.read()
-    pubkey = rsa.PublicKey.load_pkcs1(p)
-    print('**********公钥已导入,开始RSA加密**********')
+#     plaintext = "1 2, 3"
+#     # Load public key
+#     with open('keys/public.pem','rb+') as publickfile:
+#         p = publickfile.read()
+#     pubkey = rsa.PublicKey.load_pkcs1(p)
+#     print('**********公钥已导入,开始RSA加密**********')
 
-    # Encrypt text
-    crypto = rsa.encrypt(bytes(plaintext, "utf_8"), pubkey)
+#     # Encrypt text
+#     crypto = rsa.encrypt(bytes(plaintext, "utf_8"), pubkey)
 
-    db.tables["AliceBob"].add_line(crypto)
+#     db.tables["AliceBob"].add_line(crypto)
